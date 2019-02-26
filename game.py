@@ -4,8 +4,26 @@ class Game(Problem):
         pass
 
     
+    
     def actions(self,estado):
-        pass
+        """
+        :param state: an instance of state
+        :return:
+        {
+            carA: [left1, left2, right1],
+            carB: [left1, right1],
+            carC: [up1, up2, up3],
+        }
+
+        """
+        action = {}
+        for x in estado.carros + [estado.player]:
+            percept = estado.percept(x)
+            for direction in percept.keys():
+                if not percept[direction]:
+
+
+
 
 
     def result(self,state,action):
