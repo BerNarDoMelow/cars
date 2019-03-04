@@ -1,40 +1,55 @@
 
 from car import *
+from copy import deepcopy
+
 
 class Estado:
-    def __init__(self, player, cars, spaces, board_exit, board_size):
-        self.player = player
-        self.cars = cars
-        self.spaces = spaces
-        self.board_exit = board_exit
-        self.board_size = board_size
+    def __init__(self, all, exit, boardSize):
+        self.all = all
+        self.boardSize = boardSize
+        self.exit = exit
 
 
     def percept(self, car):
-        perceptions = {
-
-        }
-
-        not_empty = []
-        for car in self.cars:
-            not_empty += car.positions()
-        not_empty += [self.player.positions()]
-        
-
-        if car.direction == 'H':
-            for each in [self.player] + cars:
-                if car != each:
-                    if car.begin.y == each.begin.y:
-                        if car.begin.x + 1 == car.begin
-
-                if each.end.y == car.end.y and each.end.x ==
+        search_board = deepcopy(self.all)
+        del search_board[car.name]
+        if car.direction == "H":
+            return {
+                "esq": list(filter(lambda x:x.end.x < car.begin.x and (x.begin.y == car.begin.y or x.end.y == car.end.y or x.middle().y == car.end.y),list(search_board.values()))),
+                "dir": list(filter(lambda x:x.begin.x > car.end.x and (x.begin.y == car.end.y or x.end.y == car.end.y or x.middle().y == car.end.y),list(search_board.values()))),
+            }
+        else:
+            return {
+                "up": list(filter(lambda x:(x.begin.x == car.begin.x or x.begin.x == car.end.x or x.middle().x == car.begin.x) and x.end.y < car.begin.y,list(search_board.values()))),
+                "down": list(filter(lambda x: (x.end.x == car.end.x or x.begin.x == car.end.x or x.middle().x == car.begin.x) and x.begin.y > car.end.y,list(search_board.values()))),
+            }
 
 
-    def get_empty_spaces(self):
-        spaces = []
-        for car in self.cars:
-            spaces[]
+    def getPlayer(self):
+        return list(filter(lambda x: x.name == "?",self.all.values()))[0]
 
+    def is_empty_space(self,position):
+        """
+
+        :param position: tipo Point
+        :return:
+        """
+        for each in self.all.values():
+            if position in each.positions():
+                return False
+        return True
+
+    def findInBoard(self,position):
+        for each in self.all.values():
+            if position in each.positions():
+                return each
+        return False
+
+    def inCorner(self,car):
+        if car.direction == "V":
+            return car.begin.y == 0 or car.end.y == self.boardSize - 1
+        else:
+            return car.begin.x == 0 or car.end.x == self.boardSize - 1
 
     def __lt__(self,state):
         pass
@@ -43,84 +58,16 @@ class Estado:
         pass
 
     def __hash__(self):
-        pass
+        return hash(str(self.all))
 
     def __str__(self):
-        board = [ ['' for x in range(self.board_size-1)] for y in range(self.board_size-1) ]
-        for car in self.cars:
-            print(car.positions())
-            for position in car.positions():
-                print(position)
-                board[ position.y][ position.x ] = car.name+" "
-
-        for position in self.player.positions():
-            board[ position.y][ position.x ] = "? " 
-    
-        board[self.board_exit.point.y][self.board_exit.point.x] = "* " 
-        
-        for row in range(self.board_size-1):
-            for col in range(self.board_size-1):
-                if board[row][col] == '':
-                    board[row][col] = '# '
-
-        str_board = [ " ".join(row) for row in board]
-        str_board = "\n\n".join(str_board)
-
-        return str_board       
-
-
-
-
-def from_file(file_name):
-
-    cars = {}
-    empty_spaces = []
-    player = Car('?')
-    board_size = 0
-    board_exit = None
-
-    with open(file_name, 'r') as f:
-        y = 0
-        for row in f.readlines():
-
-            x = 0
-            for col in row:
-                if col == "#":
-                    space = Space(x, y)
-                    empty_spaces.append(space)
-                
-                elif col == "?":
-                    if not player.begin:
-                        player.set_begin(x, y)
-                    else:
-                        player.set_end(x, y)
-
-                elif col == "S":
-                    board_exit = Space(x, y)
-
-                elif col == " " or col == '\n':
-                    x -= 1
-
+        string = ""
+        for y in range(self.boardSize):
+            for x in range(self.boardSize):
+                if self.is_empty_space(Point(x,y)):
+                    string+="# "
                 else:
-                    car = Car(col)
-                    if col not in cars:
-                        car.set_begin(x, y)
-                        cars[col] = car
-                    else:
-                        cars[col].set_end(x, y)
-
-                x += 1
-
-            y += 1
-
-    return Estado(player, list(cars.values()), empty_spaces, board_exit, y+1)
-
-    
-                    
-
-estado = from_file("examples.txt")
-print(estado)
-estado.cars[0].move_left(1)
-print(estado)
-estado.player.move_down(1)
-print(estado)
+                    string += self.findInBoard(Point(x,y)).name + " "
+                if x == self.boardSize-1:
+                    string += "\n"
+        return string
